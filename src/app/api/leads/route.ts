@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-
+import data from "@/utils/data.json"
 // Mock data (replace with a database in production)
 let leads = [
   { id: 1, firstName: 'John', lastName: 'Doe', email: 'john@example.com', status: 'PENDING' },
@@ -8,7 +8,7 @@ let leads = [
 
 // GET /api/leads - Fetch all leads
 export async function GET() {
-  return NextResponse.json(leads);
+  return NextResponse.json(data);
 }
 
 // PUT /api/leads/:id - Update lead status

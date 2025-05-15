@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import LeadManagement from "@/components/LeadManagement";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { LeadHeader } from "@/components/LeadHeader";
@@ -72,7 +71,6 @@ const LeadsPage = () => {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <LeadHeader />
-        {/* <LeadManagement /> */}
         <DataTable data={data} />
       </SidebarInset>
     </SidebarProvider>
