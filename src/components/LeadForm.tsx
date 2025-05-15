@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,10 @@ const StyledTextarea = styled(Textarea)`
   height: 150px;
 `;
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const LeadForm = () => {
+  const router = useRouter();
   const [formData, setFormData] = useState<{
     firstName: string;
     lastName: string;
@@ -48,9 +52,54 @@ const LeadForm = () => {
     additionalInfo: "",
   });
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
-  const handleSubmit = async (e: { preventDefault: () => void }) => {
+  const validate = () => {
+    const errors: { [key: string]: string } = {};
+
+    if (!formData.firstName.trim()) errors.firstName = "First name is required";
+    if (!formData.lastName.trim()) errors.lastName = "Last name is required";
+    if (!formData.email.trim()) errors.email = "Email is required";
+    else if (!emailRegex.test(formData.email))
+      errors.email = "Invalid email address";
+    if (!formData.countryOfInterest.length)
+      errors.countryOfInterest = "Country is required";
+    if (!formData.resume) errors.resume = "Resume is required";
+    setFieldErrors(errors);
+    if (!formData.additionalInfo)
+      errors.additionalInfo = "Additional Information is required";
+    const {
+      firstName,
+      lastName,
+      email,
+      linkedInProfile,
+      countryOfInterest,
+      visasOfInterest,
+      resume,
+      additionalInfo,
+    } = formData;
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !linkedInProfile ||
+      !resume ||
+      !additionalInfo ||
+      !countryOfInterest.length ||
+      !visasOfInterest.length
+    ) {
+      setError("All required fields must be filled.");
+      return false;
+    }
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(false);
+    if (!validate()) return;
     try {
       const formDataObj = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
@@ -62,7 +111,7 @@ const LeadForm = () => {
       });
       if (res.ok) {
         setSuccess(true);
-        setTimeout(() => setSuccess(false), 5000);
+        setFieldErrors({});
         setFormData({
           firstName: "",
           lastName: "",
@@ -74,18 +123,23 @@ const LeadForm = () => {
           additionalInfo: "",
         });
       } else {
-        alert("Failed to submit lead.");
+        setError("Failed to submit lead. Please try again.");
       }
     } catch (err) {
-      alert("Error submitting lead.");
+      setError("Error submitting lead. Please try again.");
     }
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-4 sm:p-6 md:p-10 max-w-lg">
       {success && (
         <div className="bg-green-100 text-green-700 p-4 mb-4 rounded-lg border border-green-300">
           Lead submitted successfully!
+        </div>
+      )}
+      {error && (
+        <div className="bg-red-100 text-red-700 p-4 mb-4 rounded-lg border border-red-300">
+          {error}
         </div>
       )}
 
@@ -93,7 +147,7 @@ const LeadForm = () => {
         <div>
           <div className="flex flex-col items-center gap-4 mb-10 justify-center">
             <LucideBadgeInfo size={80} fill="#7b4096" strokeWidth={2} />
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-2xl font-bold text-center">
               Want to understand your visa options?
             </h2>
             <p className="text-1xl font-bold text-center">
@@ -103,34 +157,45 @@ const LeadForm = () => {
             </p>
           </div>
           <Input
+            className="w-full"
             value={formData.firstName}
             onChange={(e) =>
               setFormData({ ...formData, firstName: e.target.value })
             }
-            required
             placeholder="First Name"
           />
+          {fieldErrors.firstName && (
+            <span className="text-red-500 text-sm">
+              {fieldErrors.firstName}
+            </span>
+          )}
         </div>
         <div>
           <Input
+            className="w-full"
             value={formData.lastName}
             onChange={(e) =>
               setFormData({ ...formData, lastName: e.target.value })
             }
-            required
             placeholder="Last Name"
           />
+          {fieldErrors.lastName && (
+            <span className="text-red-500 text-sm">{fieldErrors.lastName}</span>
+          )}
         </div>
         <div>
           <Input
+            className="w-full"
             type="email"
             value={formData.email}
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
-            required
             placeholder="Email Address"
           />
+          {fieldErrors.email && (
+            <span className="text-red-500 text-sm">{fieldErrors.email}</span>
+          )}
         </div>
         <div>
           <Select
@@ -152,9 +217,15 @@ const LeadForm = () => {
               </SelectGroup>
             </SelectContent>
           </Select>
+          {fieldErrors.countryOfInterest && (
+            <span className="text-red-500 text-sm">
+              {fieldErrors.countryOfInterest}
+            </span>
+          )}
         </div>
         <div>
           <Input
+            className="w-full"
             value={formData.linkedInProfile}
             onChange={(e) =>
               setFormData({ ...formData, linkedInProfile: e.target.value })
@@ -166,24 +237,45 @@ const LeadForm = () => {
           <Label>Resume/CV Upload</Label>
           <Input
             type="file"
+            accept=".pdf,.doc,.docx"
             onChange={(e) => {
               const file = (e.target as HTMLInputElement).files?.[0] || null;
-              setFormData({ ...formData, resume: file });
+              if (
+                file &&
+                ![
+                  "application/pdf",
+                  "application/msword",
+                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ].includes(file.type)
+              ) {
+                setFieldErrors((prev) => ({
+                  ...prev,
+                  resume: "Only PDF, DOC, or DOCX files are allowed",
+                }));
+                setFormData({ ...formData, resume: null });
+              } else {
+                setFieldErrors((prev) => ({ ...prev, resume: "" }));
+                setFormData({ ...formData, resume: file });
+              }
             }}
-            required
           />
+          {fieldErrors.resume && (
+            <span className="text-red-500 text-sm">{fieldErrors.resume}</span>
+          )}
         </div>
         <div className="flex flex-col items-center gap-4 justify-center">
           <LucideDice6 size={80} fill="#7b4096" strokeWidth={2} />
-          <h2 className="text-2xl font-bold">Visa categories of interest?</h2>
+          <h2 className="text-2xl font-bold text-center">
+            Visa categories of interest?
+          </h2>
         </div>
         <div className="flex flex-col gap-2 justify-center">
-          {visaCard.map((visa) => (
+          {visaCard.map((visa: { name: string; id: string }) => (
             <div key={visa.id} className="flex items-center">
               <Checkbox
                 id={visa.id}
                 checked={formData.visasOfInterest.includes(visa.name)}
-                onCheckedChange={(checked) => {
+                onCheckedChange={(checked: boolean) => {
                   if (checked) {
                     setFormData({
                       ...formData,
@@ -193,7 +285,7 @@ const LeadForm = () => {
                     setFormData({
                       ...formData,
                       visasOfInterest: formData.visasOfInterest.filter(
-                        (v) => v !== visa.name
+                        (v: string) => v !== visa.name
                       ),
                     });
                   }
@@ -210,7 +302,7 @@ const LeadForm = () => {
         </div>
         <div className="flex flex-col items-center gap-4 justify-center">
           <HeartIcon size={80} fill="#7b4096" strokeWidth={2} />
-          <h2 className="text-2xl font-bold">How can we help?</h2>
+          <h2 className="text-2xl font-bold text-center">How can we help?</h2>
         </div>
         <div>
           <StyledTextarea
@@ -221,8 +313,14 @@ const LeadForm = () => {
             placeholder="What is your current status and when does it expire? What is your past immigration history? Are you looking for long-term permanent residency or short-term employment visa or both? Are there any timeline considerations?"
           />
         </div>
-        <Button type="submit" className=" text-white rounded-xl mt-4">
+        <Button type="submit" className="w-full text-white rounded-xl mt-4">
           Submit
+        </Button>
+        <Button
+          className="w-full text-white rounded-xl mt-1"
+          onClick={() => router.push("/leads")}
+        >
+          Go to Leadboard
         </Button>
       </form>
     </div>
