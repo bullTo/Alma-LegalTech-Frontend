@@ -16,6 +16,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { SelectGroup, SelectLabel } from "@radix-ui/react-select";
 import { LucideBadgeInfo, LucideDice6, HeartIcon } from "lucide-react";
+import countries from "world-countries";
 
 const visaCard = [
   { name: "O-1", id: "o1" },
@@ -54,6 +55,13 @@ const LeadForm = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+
+  // Memoized sorted country list
+  const countryOptions = React.useMemo(
+    () =>
+      countries.map((c) => c.name.common).sort((a, b) => a.localeCompare(b)),
+    []
+  );
 
   const validate = () => {
     const errors: { [key: string]: string } = {};
@@ -132,197 +140,227 @@ const LeadForm = () => {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-10 max-w-lg">
-      {success && (
-        <div className="bg-green-100 text-green-700 p-4 mb-4 rounded-lg border border-green-300">
-          Lead submitted successfully!
-        </div>
-      )}
-      {error && (
-        <div className="bg-red-100 text-red-700 p-4 mb-4 rounded-lg border border-red-300">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        <div>
-          <div className="flex flex-col items-center gap-4 mb-10 justify-center">
-            <LucideBadgeInfo size={80} fill="#7b4096" strokeWidth={2} />
-            <h2 className="text-2xl font-bold text-center">
-              Want to understand your visa options?
-            </h2>
-            <p className="text-1xl font-bold text-center">
-              Submit the form below and our team of experienced attorneys will
-              review your information and send a preliminary assessment of your
-              case based on your goals
-            </p>
-          </div>
-          <Input
-            className="w-full"
-            value={formData.firstName}
-            onChange={(e) =>
-              setFormData({ ...formData, firstName: e.target.value })
-            }
-            placeholder="First Name"
-          />
-          {fieldErrors.firstName && (
-            <span className="text-red-500 text-sm">
-              {fieldErrors.firstName}
-            </span>
-          )}
-        </div>
-        <div>
-          <Input
-            className="w-full"
-            value={formData.lastName}
-            onChange={(e) =>
-              setFormData({ ...formData, lastName: e.target.value })
-            }
-            placeholder="Last Name"
-          />
-          {fieldErrors.lastName && (
-            <span className="text-red-500 text-sm">{fieldErrors.lastName}</span>
-          )}
-        </div>
-        <div>
-          <Input
-            className="w-full"
-            type="email"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            placeholder="Email Address"
-          />
-          {fieldErrors.email && (
-            <span className="text-red-500 text-sm">{fieldErrors.email}</span>
-          )}
-        </div>
-        <div>
-          <Select
-            value={formData.countryOfInterest[0] || ""}
-            onValueChange={(value) =>
-              setFormData({ ...formData, countryOfInterest: [value] })
-            }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Country of Citizenship" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Country of Citizenship</SelectLabel>
-                <SelectItem value="H-1B">United States</SelectItem>
-                <SelectItem value="L-1">United Kingdom</SelectItem>
-                <SelectItem value="O-1">Vietnam</SelectItem>
-                <SelectItem value="E-2">Germany</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          {fieldErrors.countryOfInterest && (
-            <span className="text-red-500 text-sm">
-              {fieldErrors.countryOfInterest}
-            </span>
-          )}
-        </div>
-        <div>
-          <Input
-            className="w-full"
-            value={formData.linkedInProfile}
-            onChange={(e) =>
-              setFormData({ ...formData, linkedInProfile: e.target.value })
-            }
-            placeholder="Linkedin/Personal Website URL"
-          />
-        </div>
-        <div>
-          <Label>Resume/CV Upload</Label>
-          <Input
-            type="file"
-            accept=".pdf,.doc,.docx"
-            onChange={(e) => {
-              const file = (e.target as HTMLInputElement).files?.[0] || null;
-              if (
-                file &&
-                ![
-                  "application/pdf",
-                  "application/msword",
-                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                ].includes(file.type)
-              ) {
-                setFieldErrors((prev) => ({
-                  ...prev,
-                  resume: "Only PDF, DOC, or DOCX files are allowed",
-                }));
-                setFormData({ ...formData, resume: null });
-              } else {
-                setFieldErrors((prev) => ({ ...prev, resume: "" }));
-                setFormData({ ...formData, resume: file });
-              }
+      {success ? (
+        <div className="flex flex-col items-center justify-center p-8">
+          <LucideBadgeInfo size={80} fill="#7b4096" strokeWidth={2} />
+          <h2 className="text-2xl font-bold text-center">Thank you.</h2>
+          <p className="text-1xl font-bold text-center">
+            Your information was submitted to our team of immigration
+            attorneys.Expect an email from hello@tryalma.ai.
+          </p>
+          <Button
+            className="mt-4"
+            onClick={() => {
+              setSuccess(false);
+              router.push("/");
             }}
-          />
-          {fieldErrors.resume && (
-            <span className="text-red-500 text-sm">{fieldErrors.resume}</span>
+          >
+            Go Back to Homepage
+          </Button>
+        </div>
+      ) : (
+        <>
+          {error && (
+            <div className="bg-red-100 text-red-700 p-4 mb-4 rounded-lg border border-red-300">
+              {error}
+            </div>
           )}
-        </div>
-        <div className="flex flex-col items-center gap-4 justify-center">
-          <LucideDice6 size={80} fill="#7b4096" strokeWidth={2} />
-          <h2 className="text-2xl font-bold text-center">
-            Visa categories of interest?
-          </h2>
-        </div>
-        <div className="flex flex-col gap-2 justify-center">
-          {visaCard.map((visa: { name: string; id: string }) => (
-            <div key={visa.id} className="flex items-center">
-              <Checkbox
-                id={visa.id}
-                checked={formData.visasOfInterest.includes(visa.name)}
-                onCheckedChange={(checked: boolean) => {
-                  if (checked) {
-                    setFormData({
-                      ...formData,
-                      visasOfInterest: [...formData.visasOfInterest, visa.name],
-                    });
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <div>
+              <div className="flex flex-col items-center gap-4 mb-10 justify-center">
+                <LucideBadgeInfo size={80} fill="#7b4096" strokeWidth={2} />
+                <h2 className="text-2xl font-bold text-center">
+                  Want to understand your visa options?
+                </h2>
+                <p className="text-1xl font-bold text-center">
+                  Submit the form below and our team of experienced attorneys
+                  will review your information and send a preliminary assessment
+                  of your case based on your goals
+                </p>
+              </div>
+              <Input
+                className="w-full"
+                value={formData.firstName}
+                onChange={(e) =>
+                  setFormData({ ...formData, firstName: e.target.value })
+                }
+                placeholder="First Name"
+              />
+              {fieldErrors.firstName && (
+                <span className="text-red-500 text-sm">
+                  {fieldErrors.firstName}
+                </span>
+              )}
+            </div>
+            <div>
+              <Input
+                className="w-full"
+                value={formData.lastName}
+                onChange={(e) =>
+                  setFormData({ ...formData, lastName: e.target.value })
+                }
+                placeholder="Last Name"
+              />
+              {fieldErrors.lastName && (
+                <span className="text-red-500 text-sm">
+                  {fieldErrors.lastName}
+                </span>
+              )}
+            </div>
+            <div>
+              <Input
+                className="w-full"
+                type="email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                placeholder="Email Address"
+              />
+              {fieldErrors.email && (
+                <span className="text-red-500 text-sm">
+                  {fieldErrors.email}
+                </span>
+              )}
+            </div>
+            <div>
+              <Select
+                value={formData.countryOfInterest[0] || ""}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, countryOfInterest: [value] })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Country of Citizenship" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Country of Citizenship</SelectLabel>
+                    {countryOptions.map((country) => (
+                      <SelectItem key={country} value={country}>
+                        {country}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              {fieldErrors.countryOfInterest && (
+                <span className="text-red-500 text-sm">
+                  {fieldErrors.countryOfInterest}
+                </span>
+              )}
+            </div>
+            <div>
+              <Input
+                className="w-full"
+                value={formData.linkedInProfile}
+                onChange={(e) =>
+                  setFormData({ ...formData, linkedInProfile: e.target.value })
+                }
+                placeholder="Linkedin/Personal Website URL"
+              />
+            </div>
+            <div>
+              <Label>Resume/CV Upload</Label>
+              <Input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={(e) => {
+                  const file =
+                    (e.target as HTMLInputElement).files?.[0] || null;
+                  if (
+                    file &&
+                    ![
+                      "application/pdf",
+                      "application/msword",
+                      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    ].includes(file.type)
+                  ) {
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      resume: "Only PDF, DOC, or DOCX files are allowed",
+                    }));
+                    setFormData({ ...formData, resume: null });
                   } else {
-                    setFormData({
-                      ...formData,
-                      visasOfInterest: formData.visasOfInterest.filter(
-                        (v: string) => v !== visa.name
-                      ),
-                    });
+                    setFieldErrors((prev) => ({ ...prev, resume: "" }));
+                    setFormData({ ...formData, resume: file });
                   }
                 }}
               />
-              <label
-                htmlFor={visa.id}
-                className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-              >
-                {visa.name}
-              </label>
+              {fieldErrors.resume && (
+                <span className="text-red-500 text-sm">
+                  {fieldErrors.resume}
+                </span>
+              )}
             </div>
-          ))}
-        </div>
-        <div className="flex flex-col items-center gap-4 justify-center">
-          <HeartIcon size={80} fill="#7b4096" strokeWidth={2} />
-          <h2 className="text-2xl font-bold text-center">How can we help?</h2>
-        </div>
-        <div>
-          <StyledTextarea
-            value={formData.additionalInfo}
-            onChange={(e) =>
-              setFormData({ ...formData, additionalInfo: e.target.value })
-            }
-            placeholder="What is your current status and when does it expire? What is your past immigration history? Are you looking for long-term permanent residency or short-term employment visa or both? Are there any timeline considerations?"
-          />
-        </div>
-        <Button type="submit" className="w-full text-white rounded-xl mt-4">
-          Submit
-        </Button>
-        <Button
-          className="w-full text-white rounded-xl mt-1"
-          onClick={() => router.push("/leads")}
-        >
-          Go to Leadboard
-        </Button>
-      </form>
+            <div className="flex flex-col items-center gap-4 justify-center">
+              <LucideDice6 size={80} fill="#7b4096" strokeWidth={2} />
+              <h2 className="text-2xl font-bold text-center">
+                Visa categories of interest?
+              </h2>
+            </div>
+            <div className="flex flex-col gap-2 justify-center">
+              {visaCard.map((visa: { name: string; id: string }) => (
+                <div key={visa.id} className="flex items-center">
+                  <Checkbox
+                    id={visa.id}
+                    checked={formData.visasOfInterest.includes(visa.name)}
+                    onCheckedChange={(checked: boolean) => {
+                      if (checked) {
+                        setFormData({
+                          ...formData,
+                          visasOfInterest: [
+                            ...formData.visasOfInterest,
+                            visa.name,
+                          ],
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          visasOfInterest: formData.visasOfInterest.filter(
+                            (v: string) => v !== visa.name
+                          ),
+                        });
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor={visa.id}
+                    className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                  >
+                    {visa.name}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col items-center gap-4 justify-center">
+              <HeartIcon size={80} fill="#7b4096" strokeWidth={2} />
+              <h2 className="text-2xl font-bold text-center">
+                How can we help?
+              </h2>
+            </div>
+            <div>
+              <StyledTextarea
+                value={formData.additionalInfo}
+                onChange={(e) =>
+                  setFormData({ ...formData, additionalInfo: e.target.value })
+                }
+                placeholder="What is your current status and when does it expire? What is your past immigration history? Are you looking for long-term permanent residency or short-term employment visa or both? Are there any timeline considerations?"
+              />
+            </div>
+            <Button type="submit" className="w-full text-white rounded-xl mt-4">
+              Submit
+            </Button>
+            <Button
+              className="w-full text-white rounded-xl mt-1"
+              onClick={() => router.push("/leads")}
+            >
+              Go to Leadboard
+            </Button>
+          </form>
+        </>
+      )}
     </div>
   );
 };
