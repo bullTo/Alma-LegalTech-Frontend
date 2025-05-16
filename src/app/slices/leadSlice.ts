@@ -1,8 +1,7 @@
-// src/features/leads/leadSlice.ts
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface Lead {
-  id:string,
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -18,13 +17,16 @@ const initialState: LeadState = {
 };
 
 const leadSlice = createSlice({
-  name: 'leads',
+  name: "leads",
   initialState,
   reducers: {
     addLead: (state, action: PayloadAction<Lead>) => {
       state.leads.push(action.payload);
     },
-    updateLeadStatus: (state, action: PayloadAction<{ index: number; status: string }>) => {
+    updateLeadStatus: (
+      state,
+      action: PayloadAction<{ index: number; status: string }>
+    ) => {
       state.leads[action.payload.index].status = action.payload.status;
     },
   },

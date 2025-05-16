@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/DataTable";
-import data from "@/utils/data.json";
 const LeadsPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [password, setPassword] = useState("");
@@ -71,7 +70,7 @@ const LeadsPage = () => {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <LeadHeader />
-        <DataTable data={data} />
+        <DataTable />
       </SidebarInset>
     </SidebarProvider>
   );
