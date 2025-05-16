@@ -134,7 +134,7 @@ const LeadForm = () => {
         setError("Failed to submit lead. Please try again.");
       }
     } catch (err) {
-      setError("Error submitting lead. Please try again.");
+      setError(`Error submitting lead. Please try again. ${err}`);
     }
   };
 

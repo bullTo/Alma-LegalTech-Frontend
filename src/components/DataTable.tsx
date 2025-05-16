@@ -112,7 +112,7 @@ export function DataTable() {
         const leads = await res.json();
         setData(leads);
       } catch (err) {
-        setError("Failed to fetch leads.");
+        setError(`Failed to fetch leads. ${err}`);
       } finally {
         setLoading(false);
       }

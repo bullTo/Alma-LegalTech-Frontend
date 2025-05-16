@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { SettingsIcon, UsersIcon } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 import { NavMain } from "@/components/NavMain";
 import { NavUser } from "@/components/NavUser";
@@ -45,9 +47,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="/">
-                <img src="/logo.png" alt="logo" />
-              </a>
+              <Link href="/">
+                <Image src="/logo.png" alt="logo" width={300} height={60} />
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

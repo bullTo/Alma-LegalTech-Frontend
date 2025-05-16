@@ -505,37 +505,57 @@ export async function GET() {
 // POST /api/leads - Create a new lead (supports JSON and FormData)
 export async function POST(request: Request) {
   try {
-    let newLead: any = {};
+    let newLead: Lead;
     const contentType = request.headers.get("content-type") || "";
 
     if (contentType.includes("application/json")) {
       // Handle JSON body
       const body = await request.json();
       newLead = {
-        ...body,
         id: leads.length ? leads[leads.length - 1].id + 1 : 1,
-        status: body.status || "Pending",
+        name: typeof body.name === "string" ? body.name : "",
+        email: typeof body.email === "string" ? body.email : "",
+        linkedin: typeof body.linkedin === "string" ? body.linkedin : "",
+        resume: typeof body.resume === "string" ? body.resume : "",
+        visa: typeof body.visa === "string" ? body.visa : "",
+        status: typeof body.status === "string" ? body.status : "Pending",
+        country: typeof body.country === "string" ? body.country : "",
+        additional: typeof body.additional === "string" ? body.additional : "",
         date: new Date().toLocaleString(),
       };
     } else if (contentType.includes("multipart/form-data")) {
       // Handle FormData (file upload)
       const form = await request.formData();
+      const firstName = form.get("firstName");
+      const lastName = form.get("lastName");
+      const email = form.get("email");
+      const linkedin = form.get("linkedInProfile");
+      const resume = form.get("resume");
+      const visasOfInterest = form.getAll("visasOfInterest");
+      const country = form.get("countryOfInterest");
+      const additional = form.get("additionalInfo");
+
       newLead = {
         id: leads.length ? leads[leads.length - 1].id + 1 : 1,
         name:
-          (form.get("firstName") || "") + " " + (form.get("lastName") || ""),
-        email: form.get("email") || "",
-        linkedin: form.get("linkedInProfile") || "",
+          (typeof firstName === "string" ? firstName : "") +
+          " " +
+          (typeof lastName === "string" ? lastName : ""),
+        email: typeof email === "string" ? email : "",
+        linkedin: typeof linkedin === "string" ? linkedin : "",
         resume:
-          form.get("resume") instanceof File
-            ? (form.get("resume") as File).name
+          resume instanceof File
+            ? resume.name
+            : typeof resume === "string"
+            ? resume
             : "",
-        visa: Array.isArray(form.getAll("visasOfInterest"))
-          ? form.getAll("visasOfInterest").join(", ")
-          : form.get("visasOfInterest") || "",
+        visa: visasOfInterest
+          .map((v) => (typeof v === "string" ? v : ""))
+          .filter(Boolean)
+          .join(", "),
         status: "Pending",
-        country: form.get("countryOfInterest") || "",
-        additional: form.get("additionalInfo") || "",
+        country: typeof country === "string" ? country : "",
+        additional: typeof additional === "string" ? additional : "",
         date: new Date().toLocaleString(),
       };
     } else {
@@ -549,7 +569,7 @@ export async function POST(request: Request) {
     return NextResponse.json(newLead, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to create lead." },
+      { error: `Failed to create lead. ${error}` },
       { status: 500 }
     );
   }
@@ -569,7 +589,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ message: "Lead updated successfully." });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to update lead." },
+      { error: `Failed to update lead. ${error}` },
       { status: 500 }
     );
   }
